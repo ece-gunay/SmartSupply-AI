@@ -3,13 +3,19 @@
 AI-powered retail inventory forecasting and decision support system.
 
 ## Project goals
-- Analyze historical retail sales time series
-- Compare forecasting baselines and statistical models
-- Forecast future product demand
-- Detect potential stock-out risks
-- Provide inventory recommendations
-- Expose forecasts through a FastAPI backend
-- Provide a dashboard and AI assistant
+- Geçmiş perakende satış zaman serisi verilerini analiz etmek ve zaman serisi dinamiklerini (trend, sezonsallık, lag/rolling etkileri) incelemek
+
+- İstatistiksel ve makine öğrenmesi modellerini (XGBoost, LightGBM vb.) baseline tahminlerle karşılaştırarak gelecekteki ürün talebini tahmin etmek
+
+- Tahmin edilen talep ile mevcut stok seviyelerini karşılaştırarak olası stok tükenme (stock-out) ve fazla stok risklerini tespit etmek
+
+- Güvenlik stoğu ve iş kurallarını (business logic) kurgulayarak dinamik sipariş miktarı önerileri sunmak
+
+- Geliştirilen talep tahmini ve stok analiz servislerini FastAPI backend mimarısı üzerinden dış dünyaya sunmak (API olarak servis etmek)
+
+- Kullanıcıların tahminleri, risk durumlarını ve senaryo (What-If) analizlerini görselleştirebileceği interaktif bir Streamlit dashboard'u sunmak
+
+- İşletme kararlarını ve ürün durumlarını doğal dille açıklayabilen, sisteme entegre yapay zekâ destekli bir tedarik zinciri asistanı (AI Chatbot) sunmak
 
 ## Initial structure
 - `data/`: raw and processed datasets
