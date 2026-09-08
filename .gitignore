@@ -8,6 +8,3 @@ venv/
 *.pkl
 *.joblib
 .DS_Store
-data/processed/*
-*.csv
-*.parquet
