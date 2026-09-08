@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail Inventory Intelligence</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <main class="container">
+        <header>
+            <h1>Retail Inventory Intelligence</h1>
+            <p>Sales forecasting & inventory decision support</p>
+        </header>
+
+        <section class="cards">
+            <div class="card"><span>Forecast Horizon</span><strong id="horizon">-</strong></div>
+            <div class="card"><span>Inventory Status</span><strong id="inventory-status">-</strong></div>
+            <div class="card"><span>Reorder Point</span><strong id="reorder-point">-</strong></div>
+        </section>
+
+        <section class="panel">
+            <h2>Sales Forecast</h2>
+            <div id="forecast-list">Loading...</div>
+        </section>
+
+        <section class="panel">
+            <h2>AI Inventory Assistant</h2>
+            <div id="chat"></div>
+            <div class="chat-row">
+                <input id="message" placeholder="Ask about forecast or stock...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/dashboard.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/chatbot.js"></script>
+</body>
+</html>
