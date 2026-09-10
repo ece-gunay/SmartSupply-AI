@@ -12,3 +12,4 @@ python-dotenv
 pyarrow
 xgboost
 itertools
+joblib
