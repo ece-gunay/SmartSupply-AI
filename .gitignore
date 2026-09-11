@@ -5,6 +5,4 @@ venv/
 .env
 .ipynb_checkpoints/
 .pytest_cache/
-*.pkl
-*.joblib
 .DS_Store
