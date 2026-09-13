@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartSupply AI — Stok Yönetimi Asistanı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- SOL PANEL: Canlı risk özeti -->
+    <aside class="side">
+      <div class="brand">
+        <span class="brand-mark">◆</span>
+        <div>
+          <div class="brand-name">SmartSupply <span>AI</span></div>
+          <div class="brand-sub">Tedarik Zinciri Asistanı</div>
+        </div>
+      </div>
+
+      <div class="stat-block" id="stat-block">
+        <div class="stat-row skeleton"><span>Yükleniyor…</span></div>
+      </div>
+
+      <div class="quick">
+        <div class="quick-label">Hızlı sorgular</div>
+        <button class="quick-btn" data-q="Şu an acil sipariş verilmesi gereken en riskli ürünler hangileri?">En riskli ürünler</button>
+        <button class="quick-btn" data-q="Genel stok durumu özeti nedir?">Genel özet</button>
+        <button class="quick-btn" data-q="S001 mağazasındaki P0001 ürününün durumu nedir?">Örnek: S001 / P0001</button>
+      </div>
+
+      <div class="side-footer">
+        Veri kaynağı: <code>inventory_risk_analysis</code> · LightGBM talep modeli
+      </div>
+    </aside>
+
+    <!-- SAĞ PANEL: Sohbet -->
+    <main class="chat">
+      <div class="chat-log" id="chat-log">
+        <div class="msg bot">
+          <div class="msg-bubble">
+            Merhaba. Ben <strong>SmartSupply AI</strong> — mağaza bazlı stok seviyeleri, talep tahminleri ve
+            sipariş önerileri hakkında soru sorabilirsin. Örneğin: <em>“S001 mağazasındaki P0016 ürününün durumu nedir?”</em>
+          </div>
+        </div>
+      </div>
+
+      <form class="composer" id="composer">
+        <input
+          id="msg-input"
+          type="text"
+          autocomplete="off"
+          placeholder="Bir mağaza/ürün kodu ya da genel bir soru yazın…"
+        />
+        <button type="submit" id="send-btn">Gönder</button>
+      </form>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
