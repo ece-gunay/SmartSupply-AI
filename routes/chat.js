@@ -15,15 +15,34 @@ router.post("/chat", async (req, res) => {
     }
 
     const { storeId, productId } = dataService.extractIds(message);
-    const { isRiskList, isSummary } = dataService.detectIntent(message);
+    const { isRiskList, isSummary, isLowCover, isHighestOrder, isProjection, projectionDays } = dataService.detectIntent(message);
 
     let contextData = null;
+    let projectionData = null;
     let intent = "general";
 
-    if (storeId && productId) {
+    if (isProjection && projectionDays !== null) {
+      if (storeId && productId) {
+        contextData = dataService.findByStoreProduct(storeId, productId) || null;
+      } else if (productId) {
+        contextData = dataService.findByProduct(productId);
+      } else if (storeId) {
+        contextData = dataService.findByStore(storeId);
+      } else {
+        contextData = null;
+      }
+      projectionData = contextData ? dataService.projectStock(contextData, projectionDays) : null;
+      intent = "stock_projection";
+    } else if (storeId && productId) {
       // Senaryo 1: Ürün Durum Sorgusu (ör: "S001 mağazasındaki P0016 durumu nedir?")
       contextData = dataService.findByStoreProduct(storeId, productId) || null;
       intent = "store_product_lookup";
+    } else if (isLowCover) {
+      contextData = dataService.getLowCover();
+      intent = "low_cover_list";
+    } else if (isHighestOrder) {
+      contextData = dataService.getTopOrderRecommendations();
+      intent = "highest_order_recommendation";
     } else if (isRiskList || (!storeId && !productId && !isSummary)) {
       // Senaryo 2: Genel Risk Listesi (ör: "en riskli ürünler hangileri?")
       // Not: storeId/productId yoksa ve özel bir özet sorgusu değilse de risk listesine düşüyoruz,
@@ -41,7 +60,8 @@ router.post("/chat", async (req, res) => {
       intent = "summary";
     }
 
-    const answer = await geminiService.generateAnswer(message, contextData, conversationHistory);
+    const answerContext = projectionData ? { records: contextData, projection: projectionData } : contextData;
+    const answer = await geminiService.generateAnswer(message, answerContext, conversationHistory);
 
     // Geçmişe ekle (son 10 mesajla sınırlı tut)
     conversationHistory.push({ role: "user", text: message });
@@ -50,6 +70,8 @@ router.post("/chat", async (req, res) => {
 
     res.json({
       answer,
+      contextData,
+      projectionData,
       debug: { intent, storeId, productId, matchedRecords: Array.isArray(contextData) ? contextData.length : contextData ? 1 : 0 },
     });
   } catch (err) {

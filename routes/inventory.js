@@ -12,6 +12,11 @@ router.get("/inventory/summary", (req, res) => {
   res.json(dataService.getSummaryStats());
 });
 
+// GET /api/inventory/critical-alerts - bir günden az stok ömrü kalanlar
+router.get("/inventory/critical-alerts", (req, res) => {
+  res.json(dataService.getCriticalAlerts(3));
+});
+
 // GET /api/inventory/top-risks?level=HIGH&limit=10
 router.get("/inventory/top-risks", (req, res) => {
   const { level, limit } = req.query;

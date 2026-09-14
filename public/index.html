@@ -25,10 +25,17 @@
       </div>
 
       <div class="quick">
+        <div class="quick-label">Kritik ürünler · 1 günden az stok</div>
+        <div class="critical-alerts" id="critical-alerts">
+          <div class="alert-skeleton">Yükleniyor…</div>
+        </div>
         <div class="quick-label">Hızlı sorgular</div>
         <button class="quick-btn" data-q="Şu an acil sipariş verilmesi gereken en riskli ürünler hangileri?">En riskli ürünler</button>
         <button class="quick-btn" data-q="Genel stok durumu özeti nedir?">Genel özet</button>
         <button class="quick-btn" data-q="S001 mağazasındaki P0001 ürününün durumu nedir?">Örnek: S001 / P0001</button>
+        <button class="quick-btn" data-q="Stok ömrü 3 günden az olan ürünler hangileri?">Stok ömrü 3 günden az</button>
+        <button class="quick-btn" data-q="En yüksek sipariş önerisi alan ürün hangisi?">En yüksek sipariş önerisi</button>
+        <button class="quick-btn" data-q="S005 mağazasının durumu nedir?">S005 mağazasının durumu</button>
       </div>
 
       <div class="side-footer">
@@ -38,14 +45,34 @@
 
     <!-- SAĞ PANEL: Sohbet -->
     <main class="chat">
+      <nav class="tabs" aria-label="Ana bölümler">
+        <button class="tab active" data-tab="assistant">💬 AI Asistanı</button>
+        <button class="tab" data-tab="inventory">📊 Stok &amp; Risk Tablosu</button>
+      </nav>
       <div class="chat-log" id="chat-log">
         <div class="msg bot">
+          <div class="bot-label">🤖 SmartSupply AI</div>
           <div class="msg-bubble">
             Merhaba. Ben <strong>SmartSupply AI</strong> — mağaza bazlı stok seviyeleri, talep tahminleri ve
             sipariş önerileri hakkında soru sorabilirsin. Örneğin: <em>“S001 mağazasındaki P0016 ürününün durumu nedir?”</em>
           </div>
         </div>
       </div>
+      <section class="inventory-view" id="inventory-view" hidden>
+        <div class="table-heading">
+          <div>
+            <h2>Stok &amp; Risk Tablosu</h2>
+            <p>Mağaza ve ürün bazında aksiyon gerektiren kayıtları filtreleyin.</p>
+          </div>
+          <input id="table-filter" type="search" placeholder="Mağaza, ürün veya risk ara…" />
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Mağaza</th><th>Ürün</th><th>Mevcut stok</th><th>Stok ömrü</th><th>Risk</th><th>Önerilen sipariş</th></tr></thead>
+            <tbody id="inventory-table-body"><tr><td colspan="6">Yükleniyor…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
 
       <form class="composer" id="composer">
         <input
@@ -54,7 +81,7 @@
           autocomplete="off"
           placeholder="Bir mağaza/ürün kodu ya da genel bir soru yazın…"
         />
-        <button type="submit" id="send-btn">Gönder</button>
+        <button type="submit" id="send-btn" aria-label="Mesajı gönder">➤</button>
       </form>
     </main>
   </div>
