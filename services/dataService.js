@@ -10,6 +10,19 @@ function loadData() {
   riskData = JSON.parse(raw);
   console.log(`[dataService] ${riskData.length} mağaza-ürün kaydı yüklendi.`);
 }
+
+function getLowCover(limit = 15) {
+  return riskData
+    .filter((row) => Number(row["Days_of_Cover"]) < 3)
+    .sort((a, b) => Number(a["Days_of_Cover"]) - Number(b["Days_of_Cover"]))
+    .slice(0, limit);
+}
+
+function getTopOrderRecommendations(limit = 10) {
+  return [...riskData]
+    .sort((a, b) => Number(b["Recommended_Order_Qty"]) - Number(a["Recommended_Order_Qty"]))
+    .slice(0, limit);
+}
 loadData();
 
 function getAllData() {
@@ -64,7 +77,43 @@ function getSummaryStats() {
     if (byLevel[lvl] !== undefined) byLevel[lvl] += 1;
     totalRecommendedOrder += row["Recommended_Order_Qty"] || 0;
   }
+
   return { total, byLevel, totalRecommendedOrder };
+}
+
+function getCriticalAlerts(limit = 3) {
+  return riskData
+    .filter((row) => Number(row["Days_of_Cover"]) < 1)
+    .sort((a, b) => Number(a["Days_of_Cover"]) - Number(b["Days_of_Cover"]))
+    .slice(0, limit);
+}
+
+function projectStock(rows, days) {
+  const horizonDays = Number(days);
+  if (!Number.isFinite(horizonDays) || horizonDays < 0) {
+    throw new Error("Projeksiyon günü sıfır veya daha büyük bir sayı olmalı.");
+  }
+
+  return (Array.isArray(rows) ? rows : [rows]).filter(Boolean).map((row) => {
+    const currentInventory = Number(row["Current_Inventory"]);
+    const dailyForecast = Number(row["Avg_Daily_Forecast"]);
+    const leadTimeDemand = Number(row["Lead_Time_Demand"]);
+    const leadTimeDays = dailyForecast > 0 ? leadTimeDemand / dailyForecast : null;
+    const projectedInventory = currentInventory - dailyForecast * horizonDays;
+    return {
+      "Store ID": row["Store ID"],
+      "Product ID": row["Product ID"],
+      currentInventory,
+      horizonDays,
+      projectedInventory: Math.max(0, projectedInventory),
+      projectedInventoryRaw: projectedInventory,
+      estimatedSales: dailyForecast * horizonDays,
+      dailyForecast,
+      leadTimeDays,
+      stockoutWithinHorizon: projectedInventory <= 0,
+      orderNeededToday: leadTimeDays !== null && Number(row["Days_of_Cover"]) <= leadTimeDays,
+    };
+  });
 }
 
 // --- Kullanıcı mesajından Store ID / Product ID / niyet çıkarma ---
@@ -91,8 +140,13 @@ function detectIntent(message) {
 
   const isRiskList = riskListKeywords.some((k) => lower.includes(k));
   const isSummary = summaryKeywords.some((k) => lower.includes(k));
+  const isLowCover = lower.includes("3 günden az") || lower.includes("üç günden az");
+  const isHighestOrder = lower.includes("en yüksek sipariş") || lower.includes("en fazla sipariş");
+  const projectionMatch = lower.match(/(?:\b|\.)(\d{1,3})\s*\.?\s*(?:gün|günde|günlük)/);
+  const isProjection = Boolean(projectionMatch) && /(sonra|sonunda|durum|stok|kalır|olacak)/i.test(lower);
+  const projectionDays = projectionMatch ? Number(projectionMatch[1]) : null;
 
-  return { isRiskList, isSummary };
+  return { isRiskList, isSummary, isLowCover, isHighestOrder, isProjection, projectionDays };
 }
 
 module.exports = {
@@ -102,6 +156,10 @@ module.exports = {
   findByProduct,
   getTopRisks,
   getSummaryStats,
+  getCriticalAlerts,
+  getLowCover,
+  getTopOrderRecommendations,
+  projectStock,
   extractIds,
   detectIntent,
 };
