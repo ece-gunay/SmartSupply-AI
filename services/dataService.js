@@ -11,9 +11,14 @@ function loadData() {
   console.log(`[dataService] ${riskData.length} mağaza-ürün kaydı yüklendi.`);
 }
 
-function getLowCover(limit = 15) {
+function getLowCover(limit = 15, storeId = null) {
   return riskData
-    .filter((row) => Number(row["Days_of_Cover"]) < 3)
+    .filter((row) => {
+      const isLowCover = Number(row["Days_of_Cover"]) < 3;
+      if (!isLowCover) return false;
+      if (!storeId) return true;
+      return String(row["Store ID"]).toUpperCase() === String(storeId).toUpperCase();
+    })
     .sort((a, b) => Number(a["Days_of_Cover"]) - Number(b["Days_of_Cover"]))
     .slice(0, limit);
 }
@@ -138,12 +143,22 @@ function detectIntent(message) {
   ];
   const summaryKeywords = ["genel durum", "özet", "kaç ürün", "toplam kaç", "istatistik"];
 
+  const lowCoverPatterns = [
+    /(?:3|üç)\s*günden\s+(?:az|kısa|daha az)/i,
+    /\b(?:\d+(?:[.,]\d+)?)\s*günden\s+(?:az|kısa|daha az)\b/i,
+    /\bstok\s*ömrü\s*(?:\d+(?:[.,]\d+)?)\s*günden\s+(?:az|kısa|daha az)\b/i,
+    /\b(?:3|üç)\s*günden\s+az\s+olan\b/i,
+    /\b(?:3|üç)\s*günden\s+az\s+ürün\b/i,
+    /\bkısa\s+stok\s+ömrü\b/i,
+  ];
+
   const isRiskList = riskListKeywords.some((k) => lower.includes(k));
   const isSummary = summaryKeywords.some((k) => lower.includes(k));
-  const isLowCover = lower.includes("3 günden az") || lower.includes("üç günden az");
+  const isLowCover = lowCoverPatterns.some((pattern) => pattern.test(lower));
   const isHighestOrder = lower.includes("en yüksek sipariş") || lower.includes("en fazla sipariş");
-  const projectionMatch = lower.match(/(?:\b|\.)(\d{1,3})\s*\.?\s*(?:gün|günde|günlük)/);
-  const isProjection = Boolean(projectionMatch) && /(sonra|sonunda|durum|stok|kalır|olacak)/i.test(lower);
+  const projectionMatch = lower.match(/(?:\b|\.)(\d{1,3})\s*\.?\s*(?:gün|günde|günlük)\b/);
+  const projectionSignal = /(sonra|sonunda|durum|kalır|olacak|kaç\s*gün|kalan\s*stok|tükenir|stok\s*durumu)/i.test(lower);
+  const isProjection = Boolean(projectionMatch) && projectionSignal && !isLowCover;
   const projectionDays = projectionMatch ? Number(projectionMatch[1]) : null;
 
   return { isRiskList, isSummary, isLowCover, isHighestOrder, isProjection, projectionDays };

@@ -48,6 +48,7 @@
       <nav class="tabs" aria-label="Ana bölümler">
         <button class="tab active" data-tab="assistant">💬 AI Asistanı</button>
         <button class="tab" data-tab="inventory">📊 Stok &amp; Risk Tablosu</button>
+        <button class="tab" data-tab="analysis">📈 Analiz &amp; What-if</button>
       </nav>
       <div class="chat-log" id="chat-log">
         <div class="msg bot">
@@ -71,6 +72,38 @@
             <thead><tr><th>Mağaza</th><th>Ürün</th><th>Mevcut stok</th><th>Stok ömrü</th><th>Risk</th><th>Önerilen sipariş</th></tr></thead>
             <tbody id="inventory-table-body"><tr><td colspan="6">Yükleniyor…</td></tr></tbody>
           </table>
+        </div>
+      </section>
+      <section class="analysis-view" id="analysis-view" hidden>
+        <div class="table-heading">
+          <div>
+            <h2>Trend analizi ve what-if</h2>
+            <p>Aylık gerçekleşen satışları tahminle karşılaştırın, sipariş senaryosunu deneyin.</p>
+          </div>
+        </div>
+        <div class="analysis-grid">
+          <section class="analysis-card">
+            <div class="card-title">📅 Tarih bazlı talep trendi</div>
+            <div class="chart-legend"><span><i class="legend-swatch sales"></i>Gerçekleşen satış</span><span><i class="legend-swatch forecast"></i>Tahmin</span></div>
+            <canvas id="trend-chart" height="250" aria-label="Aylık satış ve talep tahmin grafiği"></canvas>
+            <p class="chart-note">Veri kaynağı: ham envanter kayıtları, aylık toplulaştırma.</p>
+          </section>
+          <section class="analysis-card what-if-card">
+            <div class="card-title">🧪 What-if stok senaryosu</div>
+            <label>Ürün
+              <select id="what-if-product"></select>
+            </label>
+            <label>Ek sipariş (adet)
+              <input id="what-if-order" type="number" min="0" step="1" value="0">
+            </label>
+            <label>Talep değişimi (%)
+              <input id="what-if-demand" type="number" min="-90" max="300" step="5" value="0">
+            </label>
+            <label>Simülasyon ufku (gün)
+              <input id="what-if-days" type="number" min="1" max="90" step="1" value="7">
+            </label>
+            <div id="what-if-result" class="what-if-result">Senaryo sonucu burada görünecek.</div>
+          </section>
         </div>
       </section>
 

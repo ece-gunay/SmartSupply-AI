@@ -21,7 +21,10 @@ router.post("/chat", async (req, res) => {
     let projectionData = null;
     let intent = "general";
 
-    if (isProjection && projectionDays !== null) {
+    if (isLowCover) {
+      contextData = dataService.getLowCover(15, storeId || null);
+      intent = "low_cover_list";
+    } else if (isProjection && projectionDays !== null) {
       if (storeId && productId) {
         contextData = dataService.findByStoreProduct(storeId, productId) || null;
       } else if (productId) {
@@ -37,9 +40,6 @@ router.post("/chat", async (req, res) => {
       // Senaryo 1: Ürün Durum Sorgusu (ör: "S001 mağazasındaki P0016 durumu nedir?")
       contextData = dataService.findByStoreProduct(storeId, productId) || null;
       intent = "store_product_lookup";
-    } else if (isLowCover) {
-      contextData = dataService.getLowCover();
-      intent = "low_cover_list";
     } else if (isHighestOrder) {
       contextData = dataService.getTopOrderRecommendations();
       intent = "highest_order_recommendation";

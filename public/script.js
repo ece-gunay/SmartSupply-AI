@@ -5,9 +5,14 @@ const sendBtn = document.getElementById("send-btn");
 const statBlock = document.getElementById("stat-block");
 const criticalAlerts = document.getElementById("critical-alerts");
 const inventoryView = document.getElementById("inventory-view");
+const analysisView = document.getElementById("analysis-view");
 const tableBody = document.getElementById("inventory-table-body");
 const tableFilter = document.getElementById("table-filter");
+const trendChart = document.getElementById("trend-chart");
+const whatIfProduct = document.getElementById("what-if-product");
+const whatIfResult = document.getElementById("what-if-result");
 let inventoryData = [];
+let analyticsData = [];
 
 function addMessage(text, sender, contextData = null, projectionData = null) {
   const wrap = document.createElement("div");
@@ -200,6 +205,78 @@ async function loadInventory() {
   if (!res.ok) throw new Error("Envanter yüklenemedi.");
   inventoryData = await res.json();
   renderInventoryTable();
+  loadWhatIfProducts();
+}
+
+function loadWhatIfProducts() {
+  whatIfProduct.innerHTML = inventoryData.map((row, index) =>
+    `<option value="${index}">${escapeHtml(row["Store ID"])} / ${escapeHtml(row["Product ID"])}</option>`
+  ).join("");
+  ["what-if-order", "what-if-demand", "what-if-days"].forEach((id) => document.getElementById(id).addEventListener("input", updateWhatIf));
+  whatIfProduct.addEventListener("change", updateWhatIf);
+  updateWhatIf();
+}
+
+function updateWhatIf() {
+  const row = inventoryData[Number(whatIfProduct.value)];
+  if (!row) return;
+  const order = Math.max(0, Number(document.getElementById("what-if-order").value) || 0);
+  const demandChange = Number(document.getElementById("what-if-demand").value) || 0;
+  const days = Math.max(1, Number(document.getElementById("what-if-days").value) || 1);
+  const dailyDemand = Number(row["Avg_Daily_Forecast"]) * (1 + demandChange / 100);
+  const projected = Number(row["Current_Inventory"]) + order - dailyDemand * days;
+  const cover = dailyDemand > 0 ? Math.max(0, (Number(row["Current_Inventory"]) + order) / dailyDemand) : null;
+  const exhausted = projected <= 0;
+  whatIfResult.className = `what-if-result ${exhausted ? "negative" : "positive"}`;
+  whatIfResult.innerHTML = `<strong>${exhausted ? "⚠ Stok tükeniyor" : "✓ Stok yeterli"}</strong>
+    <span>${escapeHtml(row["Store ID"])} / ${escapeHtml(row["Product ID"])} · ${formatNumber(Math.max(0, projected))} adet kalır</span>
+    <small>${formatNumber(days)} gün sonunda · Yeni stok ömrü yaklaşık ${formatNumber(cover)} gün</small>`;
+}
+
+function drawTrendChart() {
+  if (!trendChart || !analyticsData.length) return;
+  const ctx = trendChart.getContext("2d");
+  const width = trendChart.clientWidth || 700;
+  const height = 250;
+  const ratio = window.devicePixelRatio || 1;
+  trendChart.width = width * ratio;
+  trendChart.height = height * ratio;
+  ctx.scale(ratio, ratio);
+  ctx.clearRect(0, 0, width, height);
+  const pad = { left: 42, right: 16, top: 18, bottom: 34 };
+  const max = Math.max(...analyticsData.flatMap((item) => [item.unitsSold, item.demandForecast])) || 1;
+  const x = (index) => pad.left + (index * (width - pad.left - pad.right)) / Math.max(1, analyticsData.length - 1);
+  const y = (value) => height - pad.bottom - (value / max) * (height - pad.top - pad.bottom);
+  ctx.strokeStyle = "#2a3341";
+  ctx.fillStyle = "#8b96a5";
+  ctx.font = "10px Inter, sans-serif";
+  for (let i = 0; i <= 4; i += 1) {
+    const value = (max * i) / 4;
+    const lineY = y(value);
+    ctx.beginPath(); ctx.moveTo(pad.left, lineY); ctx.lineTo(width - pad.right, lineY); ctx.stroke();
+    ctx.fillText(formatNumber(value), 2, lineY + 3);
+  }
+  const drawLine = (key, color) => {
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+    analyticsData.forEach((item, index) => index ? ctx.lineTo(x(index), y(item[key])) : ctx.moveTo(x(index), y(item[key])));
+    ctx.stroke();
+  };
+  drawLine("unitsSold", "#e8a33d");
+  drawLine("demandForecast", "#4fa89a");
+  ctx.fillStyle = "#8b96a5";
+  analyticsData.forEach((item, index) => {
+    if (index % Math.max(1, Math.ceil(analyticsData.length / 8)) === 0) {
+      ctx.fillText(item.date.slice(0, 7), x(index) - 18, height - 12);
+    }
+  });
+}
+
+async function loadAnalytics() {
+  if (analyticsData.length) { drawTrendChart(); return; }
+  const res = await fetch("/api/inventory/analytics");
+  if (!res.ok) throw new Error("Analiz verisi yüklenemedi.");
+  analyticsData = await res.json();
+  drawTrendChart();
 }
 
 document.querySelectorAll(".tab").forEach((tab) => {
@@ -208,10 +285,15 @@ document.querySelectorAll(".tab").forEach((tab) => {
     const assistant = tab.dataset.tab === "assistant";
     chatLog.hidden = !assistant;
     document.querySelector(".composer").hidden = !assistant;
-    inventoryView.hidden = assistant;
+    inventoryView.hidden = assistant || tab.dataset.tab !== "inventory";
+    analysisView.hidden = assistant || tab.dataset.tab !== "analysis";
     if (!assistant && !inventoryData.length) loadInventory().catch(() => {
       tableBody.innerHTML = `<tr><td colspan="6">Tablo yüklenemedi.</td></tr>`;
     });
+    if (tab.dataset.tab === "analysis") {
+      if (!inventoryData.length) loadInventory().catch(() => {});
+      loadAnalytics().catch(() => {});
+    }
   });
 });
 
@@ -219,3 +301,4 @@ tableFilter.addEventListener("input", renderInventoryTable);
 
 loadSummary();
 loadCriticalAlerts();
+window.addEventListener("resize", drawTrendChart);
